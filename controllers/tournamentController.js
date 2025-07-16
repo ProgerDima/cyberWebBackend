@@ -6,12 +6,20 @@ const path = require("path");
 exports.getTournaments = async (req, res) => {
   const { status } = req.query;
   try {
-    let query = "SELECT * FROM tournaments";
+    let query = `SELECT * FROM tournaments 
+                 WHERE NOT (
+                   (registration_end < NOW() OR registration_end IS NULL) 
+                   AND status = 'запланований'
+                 )`;
     const params = [];
+    
     if (status) {
-      query += " WHERE status = $1";
+      query += " AND status = $1";
       params.push(status);
     }
+    
+    query += " ORDER BY created_at DESC";
+    
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {

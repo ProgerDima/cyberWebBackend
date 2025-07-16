@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
+const { cleanupExpiredTournaments } = require("../controllers/cleanupController");
 const isAdmin = require("../middleware/isAdmin");
 
 // Користувачі
@@ -16,5 +17,8 @@ router.delete("/teams/:teamId", isAdmin, adminController.deleteTeam);
 // Турніри
 router.get("/tournaments", isAdmin, adminController.getAllTournaments);
 router.delete("/tournaments/:tournamentId", isAdmin, adminController.deleteTournament);
+
+// Очищення застарілих турнірів
+router.post("/cleanup-expired-tournaments", isAdmin, cleanupExpiredTournaments);
 
 module.exports = router;

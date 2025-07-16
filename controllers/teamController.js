@@ -453,7 +453,7 @@ exports.getCaptainTeams = async (req, res) => {
           SELECT team_id FROM tournament_teams WHERE tournament_id = $2
         )
         GROUP BY t.id, t.name, t.discipline
-        HAVING COUNT(tm2.user_id) < (
+        HAVING COUNT(tm2.user_id) <= (
           SELECT players_per_team FROM tournaments WHERE id = $2
         )
       `;
@@ -462,7 +462,13 @@ exports.getCaptainTeams = async (req, res) => {
       query += ` GROUP BY t.id, t.name, t.discipline`;
     }
 
+    console.log('getCaptainTeams query:', query);
+    console.log('getCaptainTeams params:', params);
+
     const teams = await pool.query(query, params);
+    
+    console.log('getCaptainTeams result:', teams.rows);
+    
     res.json(teams.rows);
   } catch (err) {
     console.error('Помилка отримання команд капітана:', err);

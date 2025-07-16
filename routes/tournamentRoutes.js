@@ -17,8 +17,10 @@ const {
   cancelReady,   // додай цей імпорт
   startCS16Tournament // Додайте цей імпорт
 } = require("../controllers/tournamentController");
+const { cleanupExpiredTournaments } = require('../controllers/cleanupController');
 
 const verifyToken = require("../middleware/authMiddleware");
+const optionalAuth = require("../middleware/optionalAuth");
 const isOrganizer = require("../middleware/isOrganizer");
 const router = express.Router();
 
@@ -66,7 +68,31 @@ router.delete("/:tournamentId/ready", verifyToken, cancelReady);
 // Запустити турнір CS 1.6
 router.post("/:id/start-cs16", verifyToken, isOrganizer, startCS16Tournament);
 
-// Динамічний маршрут має бути останнім!
+// Додайте цей маршрут
+router.delete('/cleanup-expired', verifyToken, cleanupExpiredTournaments);
+
+// Маршрут для ручного тестування очищення (тільки для адміністраторів)
+router.post('/test-cleanup', verifyToken, async (req, res) => {
+  // Перевіряємо чи користувач адміністратор
+  if (req.user.role !== 2) {
+    return res.status(403).json({ error: "Доступ заборонено" });
+  }
+  
+  try {
+    const { autoCleanupExpiredTournaments } = require('../controllers/cleanupController');
+    const deleted = await autoCleanupExpiredTournaments();
+    res.json({ 
+      message: "Тестове очищення завершено", 
+      deletedCount: deleted.length,
+      deletedTournaments: deleted 
+    });
+  } catch (err) {
+    console.error("Помилка тестового очищення:", err);
+    res.status(500).json({ error: "Помилка сервера" });
+  }
+});
+
+// Динамічний маршрут має бути останнім! (публічний доступ)
 router.get("/:id", getTournamentById);
 
 module.exports = router;

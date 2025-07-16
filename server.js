@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cron = require("node-cron");
 require("dotenv").config();
 
 const session = require("express-session");
@@ -16,6 +17,9 @@ const matchRoutes = require("./routes/matchRoutes");
 const dailyTaskRoutes = require("./routes/dailyTaskRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+
+// Імпорт функції автоочищення
+const { autoCleanupExpiredTournaments } = require("./controllers/cleanupController");
 
 
 const app = express();
@@ -168,7 +172,22 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: "Внутрішня помилка сервера" });
 });
 
+// Налаштування автоматичного очищення турнірів
+// Запускається щодня о 00:00 (опівночі)
+cron.schedule('0 0 * * *', async () => {
+  console.log('Запуск автоматичного очищення турнірів...');
+  await autoCleanupExpiredTournaments();
+}, {
+  timezone: "Europe/Kiev"
+});
+
+// Також запускаємо очищення при старті сервера
+autoCleanupExpiredTournaments().then(() => {
+  console.log('Початкове очищення турнірів завершено');
+});
+
 // Запуск сервера
 app.listen(port, () => {
   console.log(`Сервер запущено на http://localhost:${port}`);
+  console.log('Автоматичне очищення турнірів налаштовано (щодня о 00:00)');
 });
