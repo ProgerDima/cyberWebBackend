@@ -124,17 +124,26 @@ exports.getTeamDetails = async (req, res) => {
         }
         
         const members = await pool.query(
-            `SELECT users.id, users.username 
+            `SELECT users.id, users.username, team_members.is_captain
              FROM team_members
              JOIN users ON team_members.user_id = users.id
              WHERE team_id = $1`,
             [id]
         );
 
-        res.json({
+        // Додаємо інформацію про поточного користувача (якщо авторизований)
+        const result = {
             ...teamInfo.rows[0],
-            members: members.rows
-        });
+            members: members.rows,
+            currentUser: req.user ? {
+                id: req.user.userId,
+                isAuthenticated: true
+            } : {
+                isAuthenticated: false
+            }
+        };
+
+        res.json(result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Помилка сервера" });
@@ -316,7 +325,13 @@ exports.getTeamProfile = async (req, res) => {
             wins,
             losses,
             winRate,
-            members
+            members,
+            currentUser: req.user ? {
+                id: req.user.userId,
+                isAuthenticated: true
+            } : {
+                isAuthenticated: false
+            }
         });
 
     } catch (err) {

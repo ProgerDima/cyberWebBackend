@@ -51,11 +51,11 @@ router.post("/:tournamentId/add-team", verifyToken, addTeamToTournament);
 // Видалити команду з турніру (тільки для капітана)
 router.post("/:tournamentId/remove-team", verifyToken, removeTeamFromTournament);
 
-// Отримати всі команди, які беруть участь у турнірі
-router.get("/:tournamentId/teams", verifyToken, getTournamentTeams);
+// Отримати всі команди, які беруть участь у турнірі (з опціональною авторизацією)
+router.get("/:tournamentId/teams", optionalAuth, getTournamentTeams);
 
-// Отримати всіх користувачів, які зареєстровані в турнірі
-router.get("/:tournamentId/users", verifyToken, getTournamentUsers);
+// Отримати всіх користувачів, які зареєстровані в турнірі (з опціональною авторизацією)  
+router.get("/:tournamentId/users", optionalAuth, getTournamentUsers);
 
 // Отримати всі турніри, в яких бере участь команда
 router.get("/teams/:teamId/tournaments", getTeamTournaments);
@@ -92,7 +92,7 @@ router.post('/test-cleanup', verifyToken, async (req, res) => {
   }
 });
 
-// Динамічний маршрут має бути останнім! (публічний доступ)
-router.get("/:id", getTournamentById);
+// Динамічний маршрут має бути останнім! (з опціональною авторизацією)
+router.get("/:id", optionalAuth, getTournamentById);
 
 module.exports = router;

@@ -181,7 +181,19 @@ exports.getTournamentById = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Tournament not found" });
     }
-    res.json(result.rows[0]);
+    
+    // Додаємо інформацію про поточного користувача
+    const tournament = {
+      ...result.rows[0],
+      currentUser: req.user ? {
+        id: req.user.userId,
+        isAuthenticated: true
+      } : {
+        isAuthenticated: false
+      }
+    };
+    
+    res.json(tournament);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Server Error" });

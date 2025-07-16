@@ -21,6 +21,9 @@ const adminRoutes = require("./routes/adminRoutes");
 // Імпорт функції автоочищення
 const { autoCleanupExpiredTournaments } = require("./controllers/cleanupController");
 
+// Підключаємо scheduler для автоочищення
+require("./scheduler");
+
 
 const app = express();
 const port = process.env.PORT || 8080;

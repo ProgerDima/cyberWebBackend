@@ -12,6 +12,7 @@ const {
 } = require("../controllers/authController");
 
 const verifyToken = require("../middleware/authMiddleware");
+const optionalAuth = require("../middleware/optionalAuth");
 const isAdmin     = require("../middleware/isAdmin");
 
 const router = express.Router();
@@ -20,6 +21,14 @@ const router = express.Router();
 router.post("/register", register);
 router.post("/login",    login);
 router.post("/refresh",  refreshToken);   // <-- new refresh route
+
+// Check authentication status (optional auth)
+router.get("/check", optionalAuth, (req, res) => {
+  res.json({
+    isAuthenticated: !!req.user,
+    user: req.user || null
+  });
+});
 
 // Protected
 router.get("/users", verifyToken, isAdmin, getUsers);
