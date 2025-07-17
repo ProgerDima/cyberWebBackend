@@ -54,8 +54,7 @@ passport.deserializeUser((obj, done) => {
   done(null, obj);
 });
 
-// Passport Steam strategy (временно закоментовано для відладки)
-/*
+// Passport Steam strategy
 passport.use(new SteamStrategy({
     returnURL: process.env.STEAM_RETURN_URL,
     realm: process.env.STEAM_REALM,
@@ -96,7 +95,6 @@ passport.use(new SteamStrategy({
     }
   }
 ));
-*/
 
 // Middleware
 app.use(express.json());
@@ -135,8 +133,7 @@ app.use("/daily-tasks", dailyTaskRoutes);
 app.use("/users", userRoutes);
 app.use("/admin", adminRoutes); // має бути після JWT middleware
 
-// Steam auth routes (временно закоментовано)
-/*
+// Steam auth routes
 app.get('/auth/steam',
   passport.authenticate('steam', { failureRedirect: '/' })
 );
@@ -172,7 +169,6 @@ app.get('/auth/steam/return',
     );
   }
 );
-*/
 
 // Обробка помилок
 app.use((err, req, res, next) => {
