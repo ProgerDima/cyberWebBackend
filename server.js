@@ -26,7 +26,7 @@ require("./scheduler");
 
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 
 // PostgreSQL pool
 const pool = new Pool({
@@ -54,6 +54,8 @@ passport.deserializeUser((obj, done) => {
   done(null, obj);
 });
 
+// Passport Steam strategy (временно закоментовано для відладки)
+/*
 passport.use(new SteamStrategy({
     returnURL: process.env.STEAM_RETURN_URL,
     realm: process.env.STEAM_REALM,
@@ -94,11 +96,12 @@ passport.use(new SteamStrategy({
     }
   }
 ));
+*/
 
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: "http://localhost:8080",
+    origin: ["http://localhost:8080", "http://localhost:8081"],
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type,Authorization"
 }));
@@ -132,7 +135,8 @@ app.use("/daily-tasks", dailyTaskRoutes);
 app.use("/users", userRoutes);
 app.use("/admin", adminRoutes); // має бути після JWT middleware
 
-// Steam auth routes
+// Steam auth routes (временно закоментовано)
+/*
 app.get('/auth/steam',
   passport.authenticate('steam', { failureRedirect: '/' })
 );
@@ -168,6 +172,7 @@ app.get('/auth/steam/return',
     );
   }
 );
+*/
 
 // Обробка помилок
 app.use((err, req, res, next) => {

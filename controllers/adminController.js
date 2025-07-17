@@ -4,7 +4,7 @@ const pool = require("../config/db");
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await pool.query(
-      `SELECT id, username, role, created_at, is_blocked FROM users ORDER BY created_at DESC`
+      `SELECT id, username, role_id, is_blocked FROM users ORDER BY id DESC`
     );
     const usersWithTournaments = await Promise.all(
       (users.rows || []).map(async (user) => {
@@ -16,8 +16,16 @@ exports.getAllUsers = async (req, res) => {
            WHERE tm.user_id = $1`,
           [user.id]
         );
+        
+        // Перетворити role_id на текстову роль
+        let role = "user";
+        if (user.role_id === 2) role = "admin";
+        else if (user.role_id === 3) role = "moderator";
+        
         return {
           ...user,
+          role, // Додаємо текстову роль
+          created_at: new Date(), // Тимчасово додаємо поточну дату
           tournaments: tournaments.rows || [],
         };
       })
@@ -66,10 +74,16 @@ exports.changeUserRole = async (req, res) => {
   if (!["admin", "moderator", "user"].includes(role)) {
     return res.status(400).json({ error: "Invalid role" });
   }
+  
+  // Перетворити текстову роль на role_id
+  let roleId = 1; // user
+  if (role === "admin") roleId = 2;
+  else if (role === "moderator") roleId = 3;
+  
   try {
     await pool.query(
-      `UPDATE users SET role = $1 WHERE id = $2`,
-      [role, userId]
+      `UPDATE users SET role_id = $1 WHERE id = $2`,
+      [roleId, userId]
     );
     res.json({ message: "Роль оновлено" });
   } catch (err) {
@@ -87,15 +101,23 @@ exports.getAllTeams = async (req, res) => {
     const teamsWithMembers = await Promise.all(
       (teams.rows || []).map(async (team) => {
         const members = await pool.query(
-          `SELECT u.id, u.username as name, tm.role
+          `SELECT u.id, u.username as name, tm.is_captain
            FROM team_members tm
            JOIN users u ON tm.user_id = u.id
            WHERE tm.team_id = $1`,
           [team.id]
         );
+        
+        // Перетворюємо is_captain в роль
+        const membersWithRoles = members.rows.map(member => ({
+          ...member,
+          role: member.is_captain ? "Капітан" : "Учасник"
+        }));
+        
         return {
           ...team,
-          members: members.rows || [],
+          teamId: team.id, // Додаємо teamId для сумісності з фронтендом
+          members: membersWithRoles || [],
         };
       })
     );
@@ -123,7 +145,7 @@ exports.deleteTeam = async (req, res) => {
 exports.getAllTournaments = async (req, res) => {
   try {
     const tournaments = await pool.query(
-      `SELECT id, name, discipline, created_by, created_at, status FROM tournaments ORDER BY created_at DESC`
+      `SELECT id, name, format as discipline, created_by, created_at, status FROM tournaments ORDER BY created_at DESC`
     );
     res.json(Array.isArray(tournaments.rows) ? tournaments.rows : []);
   } catch (err) {
