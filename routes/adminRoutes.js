@@ -10,6 +10,7 @@ router.get("/users", authMiddleware, isAdmin, adminController.getAllUsers);
 router.post("/users/:userId/block", authMiddleware, isAdmin, adminController.blockUser);
 router.post("/users/:userId/unblock", authMiddleware, isAdmin, adminController.unblockUser);
 router.post("/users/:userId/role", authMiddleware, isAdmin, adminController.changeUserRole);
+router.delete("/users/:userId", authMiddleware, isAdmin, adminController.deleteUser);
 
 // Команди
 router.get("/teams", authMiddleware, isAdmin, adminController.getAllTeams);

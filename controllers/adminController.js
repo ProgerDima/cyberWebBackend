@@ -96,8 +96,9 @@ exports.changeUserRole = async (req, res) => {
 exports.getAllTeams = async (req, res) => {
   try {
     const teams = await pool.query(
-      `SELECT id, name as teamName, created_at FROM teams ORDER BY created_at DESC`
+      `SELECT id, name, created_at, is_private, discipline FROM teams ORDER BY created_at DESC`
     );
+    
     const teamsWithMembers = await Promise.all(
       (teams.rows || []).map(async (team) => {
         const members = await pool.query(
@@ -116,7 +117,9 @@ exports.getAllTeams = async (req, res) => {
         
         return {
           ...team,
+          teamName: team.name, // Явно встановлюємо teamName
           teamId: team.id, // Додаємо teamId для сумісності з фронтендом
+          is_public: !team.is_private, // Додаємо is_public для фільтрації
           members: membersWithRoles || [],
         };
       })
@@ -162,6 +165,26 @@ exports.deleteTournament = async (req, res) => {
     res.json({ message: "Турнір видалено" });
   } catch (err) {
     console.error('deleteTournament error:', err);
+    res.status(500).json({ error: "DB error" });
+  }
+};
+
+// Видалити користувача
+exports.deleteUser = async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    // Спочатку видаляємо запрошення пов'язані з користувачем
+    await pool.query(`DELETE FROM invites WHERE from_user_id = $1 OR to_user_id = $1`, [userId]);
+    
+    // Потім видаляємо записи з team_members
+    await pool.query(`DELETE FROM team_members WHERE user_id = $1`, [userId]);
+    
+    // Нарешті видаляємо користувача
+    await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
+    
+    res.json({ message: "Користувача видалено" });
+  } catch (err) {
+    console.error('deleteUser error:', err);
     res.status(500).json({ error: "DB error" });
   }
 };
